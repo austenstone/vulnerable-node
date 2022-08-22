@@ -1,0 +1,9 @@
+
+name: Build
+description: Build program
+
+runs:
+  using: "composite"
+
+  steps:
+    - run: echo "The build step"
