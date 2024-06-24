@@ -13,4 +13,4 @@ jobs:
     name: CodeQL
     uses: austenstone/.github/.github/workflows/codeql-build.yml@main
     with:
-      build-action: austenstone/vulnerable-node/.github/actions/build@main
+      build-action: "austenstone/vulnerable-node/.github/actions/build@main"
