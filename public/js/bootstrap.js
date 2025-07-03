@@ -2231,7 +2231,11 @@ if (typeof jQuery === 'undefined') {
   var Affix = function (element, options) {
     this.options = $.extend({}, Affix.DEFAULTS, options)
 
-    this.$target = $(this.options.target)
+    if (typeof this.options.target !== 'string' || !this.options.target.trim()) {
+      throw new Error('Affix requires a valid CSS selector for the target option');
+    }
+
+    this.$target = jQuery.find(this.options.target)
       .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
       .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
 
