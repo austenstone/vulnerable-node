@@ -1230,7 +1230,12 @@ if (typeof jQuery === 'undefined') {
   $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
     var $this   = $(this)
     var href    = $this.attr('href')
-    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
+    var dataTarget = $this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, '')); // strip for ie7
+    if (dataTarget && /^[#.]?[a-zA-Z0-9_-]+$/.test(dataTarget)) { // Validate CSS selector
+      var $target = $.find(dataTarget);
+    } else {
+      throw new Error('Invalid data-target attribute');
+    }
     var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
 
     if ($this.is('a')) e.preventDefault()
