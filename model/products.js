@@ -18,9 +18,9 @@ function getProduct(product_id) {
 
 function search(query) {
 
-    var q = "SELECT * FROM products WHERE name ILIKE '%" + query + "%' OR description ILIKE '%" + query + "%';";
+    var q = "SELECT * FROM products WHERE name ILIKE $1 OR description ILIKE $1;";
 
-    return db.many(q);
+    return db.many(q, [`%${query}%`]);
 
 }
 
