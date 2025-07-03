@@ -12,7 +12,8 @@ router.get('/login', function(req, res, next) {
 
     var url_params = url.parse(req.url, true).query;
 
-    res.render('login', {returnurl: url_params.returnurl, auth_error: url_params.error});
+    var safeReturnUrl = url_params.returnurl && /^\/[a-zA-Z0-9/_-]*$/.test(url_params.returnurl) ? url_params.returnurl : "/";
+    res.render('login', {returnurl: safeReturnUrl, auth_error: url_params.error});
 });
 
 
