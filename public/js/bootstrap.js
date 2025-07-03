@@ -1287,6 +1287,7 @@ if (typeof jQuery === 'undefined') {
     title: '',
     delay: 0,
     html: false,
+    // The container option must be a valid CSS selector or DOM element.
     container: false,
     viewport: {
       selector: 'body',
@@ -1452,7 +1453,12 @@ if (typeof jQuery === 'undefined') {
         .addClass(placement)
         .data('bs.' + this.type, this)
 
-      this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
+      var container = this.options.container;
+      if (container && (typeof container === 'string' && $(container).length || container instanceof HTMLElement)) {
+        $tip.appendTo(container);
+      } else {
+        $tip.insertAfter(this.$element);
+      }
       this.$element.trigger('inserted.bs.' + this.type)
 
       var pos          = this.getPosition()
