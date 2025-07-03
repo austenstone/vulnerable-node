@@ -1,6 +1,7 @@
 var log4js = require("log4js");
 var url = require("url");
 var express = require('express');
+var RateLimit = require('express-rate-limit');
 var auth = require("../model/auth");
 var router = express.Router();
 
@@ -16,7 +17,13 @@ router.get('/login', function(req, res, next) {
 
 
 // Do auth
-router.post('/login/auth', function(req, res) {
+const authLimiter = RateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests per windowMs
+    message: "Too many login attempts from this IP, please try again after 15 minutes."
+});
+
+router.post('/login/auth', authLimiter, function(req, res) {
 
     var user = req.body.username;
     var password = req.body.password;
