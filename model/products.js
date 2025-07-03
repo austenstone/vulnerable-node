@@ -11,9 +11,9 @@ function list_products() {
 
 function getProduct(product_id) {
 
-    var q = "SELECT * FROM products WHERE id = '" + product_id + "';";
+    var q = "SELECT * FROM products WHERE id = $1;";
 
-    return db.one(q);
+    return db.one(q, [product_id]);
 }
 
 function search(query) {
