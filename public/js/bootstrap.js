@@ -1299,8 +1299,21 @@ if (typeof jQuery === 'undefined') {
     this.type      = type
     this.$element  = $(element)
     this.options   = this.getOptions(options)
-    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
+    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.sanitizeViewport(this.options.viewport.call(this, this.$element)) : this.sanitizeViewport(this.options.viewport.selector || this.options.viewport))
     this.inState   = { click: false, hover: false, focus: false }
+
+  Tooltip.prototype.sanitizeViewport = function (viewport) {
+    if (typeof viewport === 'string') {
+      // Ensure the viewport is a valid CSS selector
+      try {
+        document.querySelector(viewport);
+        return viewport;
+      } catch (e) {
+        throw new Error('Invalid viewport selector provided: ' + viewport);
+      }
+    }
+    return viewport; // Return as-is if not a string
+  }
 
     if (this.$element[0] instanceof document.constructor && !this.options.selector) {
       throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
