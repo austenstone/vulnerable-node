@@ -1,6 +1,7 @@
 var log4js = require("log4js");
 var url = require("url");
 var express = require('express');
+const { URL } = require('url');
 var auth = require("../model/auth");
 var router = express.Router();
 
@@ -29,7 +30,7 @@ router.post('/login/auth', function(req, res) {
             req.session.logged = true;
             req.session.user_name = user;
 
-            if (returnurl == undefined || returnurl == ""){
+            if (returnurl == undefined || returnurl == "" || !isValidReturnUrl(returnurl)) {
                 returnurl = "/";
             }
 
@@ -49,5 +50,16 @@ router.get('/logout', function(req, res, next) {
 
     res.redirect("/login")
 });
+
+
+function isValidReturnUrl(returnurl) {
+    try {
+        const baseUrl = "https://example.com"; // Replace with your application's domain
+        const parsedUrl = new URL(returnurl, baseUrl);
+        return parsedUrl.origin === baseUrl;
+    } catch (e) {
+        return false;
+    }
+}
 
 module.exports = router;
