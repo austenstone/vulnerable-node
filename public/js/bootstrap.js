@@ -691,7 +691,11 @@ if (typeof jQuery === 'undefined') {
     var target = $trigger.attr('data-target')
       || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
 
-    return $(target)
+    if (!target || !document.querySelector(target)) {
+      throw new Error('Invalid target selector');
+    }
+
+    return $.find(target)
   }
 
 
