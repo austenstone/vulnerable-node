@@ -502,7 +502,8 @@ if (typeof jQuery === 'undefined') {
   var clickHandler = function (e) {
     var href
     var $this   = $(this)
-    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
+    var selector = $this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, ''); // strip for ie7
+    var $target = $(document).find(selector); // Use $.find() to ensure safe selector interpretation
     if (!$target.hasClass('carousel')) return
     var options = $.extend({}, $target.data(), $this.data())
     var slideIndex = $this.attr('data-slide-to')
