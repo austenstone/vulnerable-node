@@ -1,4 +1,5 @@
 var express = require('express');
+var lusca = require('lusca');
 var session = require('express-session')
 var engine = require('ejs-locals');
 var path = require('path');
@@ -47,6 +48,7 @@ app.use(session({
     maxAge: 99999999999
   }
 }));
+app.use(require('lusca').csrf());
 
 /*
  * Routes config
