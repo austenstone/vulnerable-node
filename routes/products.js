@@ -64,7 +64,7 @@ router.get('/products/search', function(req, res, next) {
     check_logged(req, res);
 
     var url_params = url.parse(req.url, true).query;
-    var query = url_params.q;
+    var query = url_params.q ? url_params.q.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
 
     if (query == undefined) {
         res.render('search', { in_query: "", products: [] });
