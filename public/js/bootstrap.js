@@ -109,7 +109,7 @@ if (typeof jQuery === 'undefined') {
       selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
     }
 
-    var $parent = $(selector)
+    var $parent = $.find(selector)
 
     if (e) e.preventDefault()
 
@@ -502,7 +502,8 @@ if (typeof jQuery === 'undefined') {
   var clickHandler = function (e) {
     var href
     var $this   = $(this)
-    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
+    var selector = $this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, ''); // strip for ie7
+    var $target = $(document).find(selector); // Use $.find() to ensure safe selector interpretation
     if (!$target.hasClass('carousel')) return
     var options = $.extend({}, $target.data(), $this.data())
     var slideIndex = $this.attr('data-slide-to')
@@ -668,13 +669,12 @@ if (typeof jQuery === 'undefined') {
   }
 
   Collapse.prototype.getParent = function () {
-    return $(this.options.parent)
-      .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+    return jQuery.find(this.options.parent)
+      .filter('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
       .each($.proxy(function (i, element) {
         var $element = $(element)
         this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
       }, this))
-      .end()
   }
 
   Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
@@ -691,7 +691,11 @@ if (typeof jQuery === 'undefined') {
     var target = $trigger.attr('data-target')
       || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
 
-    return $(target)
+    if (!target || !document.querySelector(target)) {
+      throw new Error('Invalid target selector');
+    }
+
+    return $.find(target)
   }
 
 
@@ -773,7 +777,11 @@ if (typeof jQuery === 'undefined') {
       selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
     }
 
-    var $parent = selector && $(selector)
+    if (selector && !/^#[A-Za-z0-9_-]+$/.test(selector)) { // Validate selector format
+      selector = null; // Invalidate unsafe selectors
+    }
+
+    var $parent = selector && $.find(selector)
 
     return $parent && $parent.length ? $parent : $this.parent()
   }
@@ -1230,7 +1238,12 @@ if (typeof jQuery === 'undefined') {
   $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
     var $this   = $(this)
     var href    = $this.attr('href')
-    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
+    var dataTarget = $this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, '')); // strip for ie7
+    if (dataTarget && /^[#.]?[a-zA-Z0-9_-]+$/.test(dataTarget)) { // Validate CSS selector
+      var $target = $.find(dataTarget);
+    } else {
+      throw new Error('Invalid data-target attribute');
+    }
     var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
 
     if ($this.is('a')) e.preventDefault()
@@ -1287,6 +1300,7 @@ if (typeof jQuery === 'undefined') {
     title: '',
     delay: 0,
     html: false,
+    // The container option must be a valid CSS selector or DOM element.
     container: false,
     viewport: {
       selector: 'body',
@@ -1299,8 +1313,21 @@ if (typeof jQuery === 'undefined') {
     this.type      = type
     this.$element  = $(element)
     this.options   = this.getOptions(options)
-    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
+    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.sanitizeViewport(this.options.viewport.call(this, this.$element)) : this.sanitizeViewport(this.options.viewport.selector || this.options.viewport))
     this.inState   = { click: false, hover: false, focus: false }
+
+  Tooltip.prototype.sanitizeViewport = function (viewport) {
+    if (typeof viewport === 'string') {
+      // Ensure the viewport is a valid CSS selector
+      try {
+        document.querySelector(viewport);
+        return viewport;
+      } catch (e) {
+        throw new Error('Invalid viewport selector provided: ' + viewport);
+      }
+    }
+    return viewport; // Return as-is if not a string
+  }
 
     if (this.$element[0] instanceof document.constructor && !this.options.selector) {
       throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
@@ -1452,7 +1479,12 @@ if (typeof jQuery === 'undefined') {
         .addClass(placement)
         .data('bs.' + this.type, this)
 
-      this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
+      var container = this.options.container;
+      if (container && (typeof container === 'string' && $(container).length || container instanceof HTMLElement)) {
+        $tip.appendTo(container);
+      } else {
+        $tip.insertAfter(this.$element);
+      }
       this.$element.trigger('inserted.bs.' + this.type)
 
       var pos          = this.getPosition()
@@ -1882,6 +1914,13 @@ if (typeof jQuery === 'undefined') {
 +function ($) {
   'use strict';
 
+  // Helper function to sanitize CSS selectors
+  function sanitizeSelector(selector) {
+    // Allow only valid CSS selectors (basic validation)
+    var validSelectorPattern = /^[a-zA-Z0-9_\-#.\s]+$/;
+    return validSelectorPattern.test(selector) ? selector : '';
+  }
+
   // SCROLLSPY CLASS DEFINITION
   // ==========================
 
@@ -1889,7 +1928,7 @@ if (typeof jQuery === 'undefined') {
     this.$body          = $(document.body)
     this.$scrollElement = $(element).is(document.body) ? $(window) : $(element)
     this.options        = $.extend({}, ScrollSpy.DEFAULTS, options)
-    this.selector       = (this.options.target || '') + ' .nav li > a'
+    this.selector       = sanitizeSelector(this.options.target || '') + ' .nav li > a'
     this.offsets        = []
     this.targets        = []
     this.activeTarget   = null
@@ -2217,7 +2256,11 @@ if (typeof jQuery === 'undefined') {
   var Affix = function (element, options) {
     this.options = $.extend({}, Affix.DEFAULTS, options)
 
-    this.$target = $(this.options.target)
+    if (typeof this.options.target !== 'string' || !this.options.target.trim()) {
+      throw new Error('Affix requires a valid CSS selector for the target option');
+    }
+
+    this.$target = jQuery.find(this.options.target)
       .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
       .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
 

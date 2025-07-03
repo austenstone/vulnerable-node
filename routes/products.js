@@ -64,7 +64,7 @@ router.get('/products/search', function(req, res, next) {
     check_logged(req, res);
 
     var url_params = url.parse(req.url, true).query;
-    var query = url_params.q;
+    var query = url_params.q ? url_params.q.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
 
     if (query == undefined) {
         res.render('search', { in_query: "", products: [] });
@@ -117,7 +117,7 @@ router.all('/products/buy', function(req, res, next) {
         }
 
         // Check mail format
-        var re = /^([a-zA-Z0-9])(([\-.]|[_]+)?([a-zA-Z0-9]+))*(@){1}[a-z0-9]+[.]{1}(([a-z]{2,3})|([a-z]{2,3}[.]{1}[a-z]{2,3}))$/
+        var re = /^[a-zA-Z0-9](?:[\-._]?[a-zA-Z0-9]+)*@[a-z0-9]+\.[a-z]{2,3}(?:\.[a-z]{2,3})?$/
         if (!re.test(cart.mail)){
             throw new Error("Invalid mail format");
         }
